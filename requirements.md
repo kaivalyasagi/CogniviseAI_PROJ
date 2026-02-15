@@ -1,10 +1,10 @@
-# 📌 ClarityAI – Requirements Document
+# 📌 CongniviseAI – Requirements Document
 
 ## 1. Problem Statement
 
 Students learning Data Structures & Algorithms often struggle not because of lack of information, but because of hidden conceptual misunderstandings.
 
-ClarityAI identifies *why* a learner is confused and provides targeted corrective explanations.
+CongniviseAI identifies *why* a learner is confused and provides targeted corrective explanations.
 
 ---
 
