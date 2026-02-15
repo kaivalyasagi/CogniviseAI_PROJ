@@ -1,8 +1,8 @@
-# 🧠 ClarityAI – System Design Document
+# 🧠 CongniviseAI – System Design Document
 
 ## 1. Architecture Overview
 
-ClarityAI follows a modular layered architecture:
+CongniviseAI follows a modular layered architecture:
 
 
 ---
