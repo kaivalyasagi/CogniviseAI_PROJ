@@ -1,1 +1,932 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cognivise – AI Cognitive Platform</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ════════════════════════════════════
+   THEME VARIABLES
+════════════════════════════════════ */
+:root {
+  --sidebar: 242px;
+  --radius:  10px;
+  --trans:   all 0.25s ease;
+}
+[data-theme="dark"] {
+  --bg:        #05080f;
+  --surface:   #0a0f1e;
+  --surface2:  #0f1628;
+  --surface3:  #151e35;
+  --border:    rgba(82,200,255,0.13);
+  --border2:   rgba(82,200,255,0.28);
+  --text:      #b8d0e8;
+  --text2:     #7a9ab8;
+  --text3:     #3d5a75;
+  --head:      #ddeeff;
+  --sidebar-bg:rgba(7,11,22,0.98);
+  --overlay:   rgba(3,6,15,0.9);
+  --shadow:    0 8px 32px rgba(0,0,0,0.5);
+  --c1:        #52c8ff;
+  --c2:        #ff4d72;
+  --c3:        #6dff72;
+  --c4:        #ffbd4d;
+  --c1g:       rgba(82,200,255,0.12);
+  --inp:       rgba(0,0,0,0.25);
+}
+[data-theme="light"] {
+  --bg:        #eef3fa;
+  --surface:   #ffffff;
+  --surface2:  #e8eef8;
+  --surface3:  #dce4f0;
+  --border:    rgba(30,110,180,0.15);
+  --border2:   rgba(30,110,180,0.3);
+  --text:      #2e4460;
+  --text2:     #5a789a;
+  --text3:     #9ab8d0;
+  --head:      #0d1e30;
+  --sidebar-bg:rgba(235,242,255,0.98);
+  --overlay:   rgba(200,220,248,0.9);
+  --shadow:    0 8px 32px rgba(0,40,100,0.1);
+  --c1:        #0e7abf;
+  --c2:        #d63058;
+  --c3:        #1a9e20;
+  --c4:        #c98000;
+  --c1g:       rgba(14,122,191,0.09);
+  --inp:       rgba(255,255,255,0.7);
+}
 
+/* ════════════════════════════════════
+   BASE
+════════════════════════════════════ */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:'Syne',sans-serif;
+  background:var(--bg); color:var(--text);
+  min-height:100vh; overflow-x:hidden;
+  transition:background .3s,color .3s;
+}
+#bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+.shell{display:flex;min-height:100vh;position:relative;z-index:1;}
+
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
+aside{
+  width:var(--sidebar); min-height:100vh;
+  background:var(--sidebar-bg);
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column;
+  position:fixed; top:0; left:0; bottom:0;
+  backdrop-filter:blur(24px); z-index:200;
+  transition:background .3s;
+}
+.logo-wrap{padding:24px 20px 18px; border-bottom:1px solid var(--border);}
+.logo-eye{font-family:'JetBrains Mono',monospace; font-size:0.48rem; color:var(--text3); letter-spacing:4px; margin-bottom:6px; text-transform:uppercase;}
+.logo-name{font-size:1.5rem; font-weight:800; color:var(--head); letter-spacing:.3px;}
+.logo-name em{color:var(--c1); font-style:normal; text-shadow:0 0 22px var(--c1g);}
+.logo-pill{
+  display:inline-flex; align-items:center; gap:5px;
+  margin-top:9px; padding:3px 10px;
+  background:var(--c1g); border:1px solid var(--border2);
+  border-radius:20px; font-family:'JetBrains Mono',monospace;
+  font-size:0.48rem; color:var(--c1); letter-spacing:2px;
+}
+.ldot{width:5px;height:5px;border-radius:50%;background:var(--c3);box-shadow:0 0 5px var(--c3);animation:blink 2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+.uid-card{margin:12px 12px 0; padding:11px 13px; background:var(--surface2); border:1px solid var(--border); border-radius:var(--radius);}
+.uid-lbl{font-family:'JetBrains Mono',monospace; font-size:.47rem; color:var(--text3); letter-spacing:2px; margin-bottom:4px;}
+.uid-inp{width:100%; background:transparent; border:none; color:var(--c1); font-family:'JetBrains Mono',monospace; font-size:.76rem; font-weight:500; outline:none;}
+.uid-inp::placeholder{color:var(--text3);}
+
+nav{flex:1; padding:12px 8px; display:flex; flex-direction:column; gap:2px;}
+.nsec{font-family:'JetBrains Mono',monospace; font-size:.46rem; color:var(--text3); letter-spacing:3px; padding:10px 12px 4px; text-transform:uppercase;}
+.nb{
+  display:flex; align-items:center; gap:9px;
+  padding:9px 13px; border-radius:8px;
+  border:1px solid transparent; cursor:pointer;
+  font-size:.8rem; font-weight:600; color:var(--text2);
+  background:transparent; transition:var(--trans);
+  text-align:left; width:100%; position:relative;
+}
+.nb::before{content:''; position:absolute; left:0; top:20%; bottom:20%; width:2px; background:var(--c1); border-radius:0 2px 2px 0; opacity:0; transition:opacity .2s;}
+.nb:hover{color:var(--head); background:var(--c1g); border-color:var(--border);}
+.nb.active{color:var(--c1); background:var(--c1g); border-color:var(--border2);}
+.nb.active::before{opacity:1;}
+.ni{font-size:.88rem; width:17px; text-align:center; flex-shrink:0;}
+
+.sidebar-foot{border-top:1px solid var(--border);}
+.theme-row{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:11px 14px; cursor:pointer;
+}
+.th-lbl{font-family:'JetBrains Mono',monospace; font-size:.5rem; color:var(--text3); letter-spacing:2px;}
+.tog-wrap{display:flex; align-items:center; gap:6px; background:none; border:none; cursor:pointer;}
+.tog-track{width:32px; height:17px; border-radius:9px; background:var(--surface3); border:1px solid var(--border2); position:relative; transition:var(--trans);}
+.tog-knob{width:11px; height:11px; border-radius:50%; background:var(--text3); position:absolute; top:2px; left:2px; transition:transform .3s,background .3s;}
+[data-theme="light"] .tog-knob{transform:translateX(15px); background:var(--c1);}
+[data-theme="light"] .tog-track{background:var(--c1g); border-color:var(--c1);}
+.tog-ico{font-size:.82rem;}
+
+/* ════════════════════════════════════
+   MAIN
+════════════════════════════════════ */
+main{margin-left:var(--sidebar); flex:1; padding:36px 38px; min-height:100vh;}
+.page{display:none; animation:fadeUp .32s ease;}
+.page.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* Page header */
+.ph{margin-bottom:28px;}
+.ph-eye{font-family:'JetBrains Mono',monospace; font-size:.53rem; color:var(--c1); letter-spacing:4px; margin-bottom:7px; opacity:.8;}
+.ph-title{font-size:1.95rem; font-weight:800; color:var(--head); line-height:1.1; margin-bottom:5px;}
+.ph-title em{color:var(--c1); font-style:normal;}
+.ph-sub{font-family:'JetBrains Mono',monospace; font-size:.6rem; color:var(--text2); letter-spacing:.2px; line-height:1.8;}
+.ph-line{height:1px; margin-top:18px; background:linear-gradient(90deg,var(--c1),transparent); opacity:.3;}
+
+/* Cards */
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; transition:border-color .2s;}
+.card:hover{border-color:var(--border2);}
+.clbl{font-family:'JetBrains Mono',monospace; font-size:.5rem; color:var(--text3); letter-spacing:3px; margin-bottom:14px; text-transform:uppercase; display:flex; align-items:center; gap:8px;}
+.clbl::after{content:''; flex:1; height:1px; background:var(--border);}
+
+/* Form */
+.field{display:flex; flex-direction:column; gap:5px; flex:1; min-width:130px;}
+.flbl{font-family:'JetBrains Mono',monospace; font-size:.53rem; color:var(--c1); letter-spacing:2px; font-weight:500;}
+input,select,textarea{
+  background:var(--inp); border:1px solid var(--border); color:var(--head);
+  font-family:'JetBrains Mono',monospace; font-size:.78rem;
+  padding:9px 12px; border-radius:7px; outline:none;
+  transition:border-color .2s,box-shadow .2s; width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--c1); box-shadow:0 0 0 3px var(--c1g);}
+select option{background:var(--surface2);}
+textarea{min-height:110px; resize:vertical; line-height:1.7; font-size:.76rem;}
+input::placeholder,textarea::placeholder{color:var(--text3);}
+
+/* Buttons */
+.btn{
+  display:inline-flex; align-items:center; gap:7px;
+  padding:10px 20px; border-radius:7px;
+  font-family:'Syne',sans-serif; font-weight:700;
+  font-size:.78rem; letter-spacing:.8px;
+  cursor:pointer; transition:var(--trans); border:none; white-space:nowrap;
+}
+.btn-p{background:var(--c1); color:#040810; font-weight:800; box-shadow:0 4px 16px var(--c1g);}
+.btn-p:hover{filter:brightness(1.12); transform:translateY(-1px); box-shadow:0 6px 24px var(--c1g);}
+.btn-g{background:transparent; border:1px solid var(--border2); color:var(--c1);}
+.btn-g:hover{background:var(--c1g); border-color:var(--c1);}
+.btn:disabled{opacity:.4; cursor:not-allowed; transform:none!important;}
+.row{display:flex; gap:13px; align-items:flex-end; flex-wrap:wrap; margin-bottom:18px;}
+
+/* ════════════════════════════════════
+   QUESTIONS
+════════════════════════════════════ */
+#questionBox{display:flex; flex-direction:column; gap:13px; margin-bottom:18px;}
+.q-card{
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:20px;
+  position:relative; animation:qIn .3s ease both;
+  transition:border-color .2s;
+}
+.q-card:hover{border-color:var(--border2);}
+@keyframes qIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
+.q-card::after{content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--c1),var(--c2)); border-radius:var(--radius) var(--radius) 0 0; opacity:.55;}
+.q-num{font-family:'JetBrains Mono',monospace; font-size:.5rem; color:var(--c1); letter-spacing:3px; margin-bottom:10px; opacity:.7;}
+.q-text{font-size:.95rem; font-weight:700; color:var(--head); margin-bottom:14px; line-height:1.65;}
+.ans-lbl{font-family:'JetBrains Mono',monospace; font-size:.48rem; color:var(--text3); letter-spacing:2px; margin-bottom:5px; text-transform:uppercase;}
+.ans-box{
+  background:var(--surface2); border:1px solid var(--border); color:var(--head);
+  font-family:'JetBrains Mono',monospace; font-size:.77rem;
+  padding:11px 13px; border-radius:7px; outline:none;
+  width:100%; resize:vertical; min-height:68px; line-height:1.65;
+  transition:border-color .2s,box-shadow .2s;
+}
+.ans-box:focus{border-color:var(--c1); box-shadow:0 0 0 3px var(--c1g);}
+.ans-box::placeholder{color:var(--text3);}
+
+/* Thinking panel */
+#thinkingPanel{margin-bottom:18px;}
+.tip{font-family:'JetBrains Mono',monospace; font-size:.58rem; color:var(--text2); line-height:1.8; margin-bottom:13px; padding:9px 13px; background:var(--c1g); border-left:2px solid var(--c1); border-radius:0 6px 6px 0;}
+
+/* Report */
+.report{background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius); padding:24px; animation:fadeUp .4s ease; position:relative;}
+.report::before{content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,var(--c2),var(--c1),var(--c3)); border-radius:var(--radius) var(--radius) 0 0;}
+.rhead{font-family:'JetBrains Mono',monospace; font-size:.55rem; letter-spacing:3px; color:var(--text3); margin-bottom:18px; text-transform:uppercase;}
+.rgrid{display:grid; grid-template-columns:1fr 1fr; gap:11px; margin-bottom:14px;}
+.ri{background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:14px;}
+.ri-lbl{font-family:'JetBrains Mono',monospace; font-size:.48rem; color:var(--text3); letter-spacing:2px; margin-bottom:7px; text-transform:uppercase;}
+.ri-val{font-size:.88rem; font-weight:600; color:var(--head); line-height:1.5;}
+.ri-score{font-family:'JetBrains Mono',monospace; font-size:1.85rem; font-weight:400;}
+.bar{margin-top:8px; height:3px; background:rgba(255,255,255,.05); border-radius:3px; overflow:hidden;}
+.bfill{height:100%; border-radius:3px; width:0; transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.feedback{background:var(--c1g); border:1px solid var(--border2); border-radius:8px; padding:14px 17px; font-size:.83rem; color:var(--text); line-height:1.8; margin-top:2px;}
+.feedback strong{color:var(--c1); display:block; margin-bottom:5px; font-family:'JetBrains Mono',monospace; font-size:.5rem; letter-spacing:2px;}
+
+/* ════════════════════════════════════
+   DASHBOARD
+════════════════════════════════════ */
+.hero{display:grid; grid-template-columns:repeat(4,1fr); gap:13px; margin-bottom:20px;}
+.hcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; position:relative; overflow:hidden; transition:var(--trans);}
+.hcard:hover{border-color:var(--border2); transform:translateY(-2px);}
+.hcard::before{content:''; position:absolute; top:0; left:0; bottom:0; width:2px;}
+.hcard.h1::before{background:linear-gradient(180deg,var(--c1),transparent);}
+.hcard.h2::before{background:linear-gradient(180deg,var(--c2),transparent);}
+.hcard.h3::before{background:linear-gradient(180deg,var(--c3),transparent);}
+.hcard.h4::before{background:linear-gradient(180deg,var(--c4),transparent);}
+.hlbl{font-family:'JetBrains Mono',monospace; font-size:.48rem; color:var(--text3); letter-spacing:2px; margin-bottom:9px; text-transform:uppercase;}
+.hval{font-family:'JetBrains Mono',monospace; font-size:1.8rem; font-weight:300; line-height:1;}
+.hval.h1{color:var(--c1);} .hval.h2{color:var(--c2);} .hval.h3{color:var(--c3);} .hval.h4{color:var(--c4);}
+
+.c2col{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+.ccrd{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px;}
+.cfull{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:14px;}
+.ctitle{font-family:'JetBrains Mono',monospace; font-size:.52rem; color:var(--text3); letter-spacing:3px; margin-bottom:14px; text-transform:uppercase;}
+.cwrap{position:relative; height:205px;}
+
+/* ════════════════════════════════════
+   ANALYTICS
+════════════════════════════════════ */
+.s3{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;}
+.scard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; position:relative; overflow:hidden; transition:var(--trans);}
+.scard:hover{border-color:var(--border2); transform:translateY(-2px);}
+.scard::after{content:''; position:absolute; bottom:0; left:0; right:0; height:2px;}
+.scard.s1::after{background:linear-gradient(90deg,transparent,var(--c1));}
+.scard.s2::after{background:linear-gradient(90deg,transparent,var(--c2));}
+.scard.s3::after{background:linear-gradient(90deg,transparent,var(--c3));}
+.slbl{font-family:'JetBrains Mono',monospace; font-size:.48rem; color:var(--text3); letter-spacing:3px; margin-bottom:11px; text-transform:uppercase;}
+.sval{font-family:'JetBrains Mono',monospace; font-size:2rem; font-weight:300; line-height:1; margin-bottom:4px;}
+.sval.s1{color:var(--c1);} .sval.s2{color:var(--c2);} .sval.s3{color:var(--c3);}
+
+/* ════════════════════════════════════
+   TABLE
+════════════════════════════════════ */
+.tbl{width:100%; border-collapse:collapse;}
+.tbl th{font-family:'JetBrains Mono',monospace; font-size:.48rem; color:var(--text3); letter-spacing:2px; text-align:left; padding:8px 13px; border-bottom:1px solid var(--border); text-transform:uppercase;}
+.tbl td{font-family:'JetBrains Mono',monospace; font-size:.71rem; color:var(--text); padding:10px 13px; border-bottom:1px solid rgba(255,255,255,.025);}
+.tbl tr:hover td{background:var(--c1g);}
+.pill{display:inline-block; padding:2px 9px; border-radius:20px; font-family:'JetBrains Mono',monospace; font-size:.5rem; letter-spacing:1px; text-transform:uppercase;}
+.pill.up{background:rgba(109,255,114,.1); color:var(--c3); border:1px solid rgba(109,255,114,.2);}
+.pill.dn{background:rgba(255,77,114,.1);  color:var(--c2); border:1px solid rgba(255,77,114,.2);}
+.pill.st{background:rgba(82,200,255,.1);  color:var(--c1); border:1px solid rgba(82,200,255,.2);}
+.pill.hi{background:rgba(109,255,114,.1); color:var(--c3); border:1px solid rgba(109,255,114,.2);}
+.pill.md{background:rgba(255,189,77,.1);  color:var(--c4); border:1px solid rgba(255,189,77,.2);}
+.pill.lo{background:rgba(255,77,114,.1);  color:var(--c2); border:1px solid rgba(255,77,114,.2);}
+
+/* ════════════════════════════════════
+   PROFILES
+════════════════════════════════════ */
+.pgrid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+.pcard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:18px; transition:var(--trans);}
+.pcard:hover{border-color:var(--border2);}
+.pheader{display:flex; align-items:center; gap:12px; margin-bottom:14px;}
+.ava{width:36px; height:36px; border-radius:8px; background:var(--c1g); border:1px solid var(--border2); display:flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-size:.68rem; font-weight:600; color:var(--c1); flex-shrink:0;}
+.pid{font-weight:700; color:var(--head); font-size:.86rem;}
+.psub{font-family:'JetBrains Mono',monospace; font-size:.46rem; color:var(--text3); letter-spacing:2px; margin-top:2px;}
+.pstats{display:grid; grid-template-columns:repeat(3,1fr); gap:7px;}
+.ps{background:var(--surface2); border-radius:7px; padding:10px; border:1px solid var(--border);}
+.psl{font-family:'JetBrains Mono',monospace; font-size:.44rem; color:var(--text3); letter-spacing:1.5px; margin-bottom:4px; display:block; text-transform:uppercase;}
+.psv{font-size:.74rem; font-weight:600; color:var(--head);}
+
+/* ════════════════════════════════════
+   ABOUT
+════════════════════════════════════ */
+.a2{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;}
+.acard{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; transition:var(--trans);}
+.acard:hover{border-color:var(--border2);}
+.acard h3{font-size:.94rem; font-weight:700; color:var(--head); margin-bottom:9px;}
+.acard p{font-size:.82rem; color:var(--text); line-height:1.75;}
+.acard em{color:var(--c1); font-style:normal;}
+.alist{margin-top:11px; list-style:none; display:flex; flex-direction:column; gap:5px;}
+.alist li{font-family:'JetBrains Mono',monospace; font-size:.68rem; color:var(--text2); padding-left:13px; position:relative; line-height:1.6;}
+.alist li::before{content:'→'; position:absolute; left:0; color:var(--c1);}
+.alist li strong{color:var(--c1);}
+.aroute{display:flex; align-items:center; gap:9px; padding:9px 12px; background:var(--surface2); border-radius:7px; margin-bottom:6px; border:1px solid var(--border);}
+.mth{font-family:'JetBrains Mono',monospace; font-size:.53rem; letter-spacing:1px; padding:3px 7px; border-radius:4px; font-weight:600; flex-shrink:0;}
+.mth.get{background:rgba(109,255,114,.12); color:var(--c3);}
+.mth.post{background:rgba(82,200,255,.12); color:var(--c1);}
+.rpath{font-family:'JetBrains Mono',monospace; font-size:.71rem; color:var(--head);}
+.rdesc{font-family:'JetBrains Mono',monospace; font-size:.56rem; color:var(--text3); margin-left:auto;}
+
+/* ════════════════════════════════════
+   OVERLAY & TOAST
+════════════════════════════════════ */
+.overlay{position:fixed;inset:0;background:var(--overlay);backdrop-filter:blur(8px);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;}
+.overlay.on{opacity:1;pointer-events:all;}
+.spin{width:40px;height:40px;border:1.5px solid rgba(82,200,255,.12);border-top-color:var(--c1);border-radius:50%;animation:spin .75s linear infinite;margin-bottom:14px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.otxt{font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--c1);letter-spacing:3px;animation:blink 1.5s ease-in-out infinite;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:11px 16px;font-family:'JetBrains Mono',monospace;font-size:.66rem;letter-spacing:.5px;color:var(--c1);z-index:9999;transform:translateY(12px);opacity:0;transition:all .3s;max-width:330px;box-shadow:var(--shadow);}
+.toast.on{transform:translateY(0);opacity:1;}
+.toast.err{color:var(--c2);border-color:rgba(255,77,114,.3);}
+.empty{text-align:center;padding:36px 20px;font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--text3);letter-spacing:2px;}
+.empty-ico{font-size:1.9rem;opacity:.2;margin-bottom:10px;}
+.empty p{margin-top:5px;color:var(--text2);line-height:1.7;font-size:.56rem;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px;}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="overlay" id="overlay"><div class="spin"></div><div class="otxt" id="otxt">PROCESSING</div></div>
+<div class="toast" id="toast"></div>
+
+<div class="shell">
+<!-- ══ SIDEBAR ══ -->
+<aside>
+  <div class="logo-wrap">
+    <div class="logo-eye">// Cognitive Engine</div>
+    <div class="logo-name">Cogni<em>vise</em></div>
+    <div class="logo-pill"><span class="ldot"></span> GEMINI · ONLINE</div>
+  </div>
+
+  <div class="uid-card" style="margin-bottom:12px;">
+    <div class="uid-lbl">// ACTIVE USER</div>
+    <input class="uid-inp" id="userId" placeholder="user_001" value="user_001">
+  </div>
+
+  <nav>
+    <div class="nsec">Workspace</div>
+    <button class="nb active" onclick="goPage('diagnosis',this)"><span class="ni">⚡</span>Diagnosis</button>
+    <button class="nb" onclick="goPage('dashboard',this)"><span class="ni">◎</span>Dashboard</button>
+    <button class="nb" onclick="goPage('analytics',this)"><span class="ni">◈</span>Analytics</button>
+    <button class="nb" onclick="goPage('profiles',this)"><span class="ni">◉</span>Profiles</button>
+    <div class="nsec" style="margin-top:5px;">System</div>
+    <button class="nb" onclick="goPage('about',this)"><span class="ni">◇</span>About & API</button>
+  </nav>
+
+  <div class="sidebar-foot">
+    <div class="theme-row" onclick="toggleTheme()">
+      <span class="th-lbl" id="thLbl">LIGHT MODE</span>
+      <button class="tog-wrap" onclick="event.stopPropagation();toggleTheme()">
+        <span class="tog-ico" id="thIco">☀️</span>
+        <div class="tog-track"><div class="tog-knob"></div></div>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main>
+
+<!-- ════ DIAGNOSIS ════ -->
+<div id="diagnosis" class="page active">
+  <div class="ph">
+    <div class="ph-eye">// MODULE_01</div>
+    <div class="ph-title">AI <em>Diagnosis</em></div>
+    <div class="ph-sub">Enter a topic → get AI questions → write your answers → describe your thinking → get a full cognitive report</div>
+    <div class="ph-line"></div>
+  </div>
+
+  <div class="row">
+    <div class="field">
+      <div class="flbl">// TOPIC</div>
+      <input id="topicInput" value="RECURSION" placeholder="e.g. RECURSION, TREES, SORTING...">
+    </div>
+    <div class="field" style="max-width:145px;">
+      <div class="flbl">// DIFFICULTY</div>
+      <select id="diffInput">
+        <option>Easy</option>
+        <option selected>Medium</option>
+        <option>Hard</option>
+      </select>
+    </div>
+    <button class="btn btn-p" onclick="generateQuestions(this)">⚡ Generate Questions</button>
+  </div>
+
+  <div id="questionBox"></div>
+
+  <div id="thinkingPanel" class="card" style="display:none; margin-bottom:18px;">
+    <div class="clbl">// YOUR OVERALL THINKING PROCESS</div>
+    <div class="tip">Describe how you approached all the questions — your reasoning, uncertainties, and how you built your answers. The AI analyses <strong>how you think</strong>, not just what you wrote.</div>
+    <textarea id="thinkingInput" placeholder="Walk through your reasoning: What did you consider first? What was confusing? How did you build your answers?"></textarea>
+    <div style="margin-top:13px; display:flex; gap:11px; flex-wrap:wrap;">
+      <button class="btn btn-p" onclick="analyzeThinking(this)">🔬 Analyze My Thinking</button>
+      <button class="btn btn-g" onclick="saveSession()">💾 Save Session</button>
+    </div>
+  </div>
+
+  <div id="reportBox"></div>
+</div>
+
+<!-- ════ DASHBOARD ════ -->
+<div id="dashboard" class="page">
+  <div class="ph">
+    <div class="ph-eye">// MODULE_02</div>
+    <div class="ph-title">Live <em>Dashboard</em></div>
+    <div class="ph-sub">Aggregated data from your backend — all sessions, topics, thinking patterns, and trends</div>
+    <div class="ph-line"></div>
+  </div>
+
+  <div class="hero">
+    <div class="hcard h1"><div class="hlbl">TOTAL SESSIONS</div><div class="hval h1" id="dTotal">—</div></div>
+    <div class="hcard h2"><div class="hlbl">AVG SCORE</div><div class="hval h2" id="dAvg">—</div></div>
+    <div class="hcard h3"><div class="hlbl">TOP TOPIC</div><div class="hval h3" id="dTop" style="font-size:1.05rem;margin-top:6px;">—</div></div>
+    <div class="hcard h4"><div class="hlbl">IMPROVING USERS</div><div class="hval h4" id="dImprv">—</div></div>
+  </div>
+
+  <div class="c2col">
+    <div class="ccrd"><div class="ctitle">// TOPIC FREQUENCY</div><div class="cwrap"><canvas id="topicChart"></canvas></div></div>
+    <div class="ccrd"><div class="ctitle">// THINKING PATTERNS</div><div class="cwrap"><canvas id="patternChart"></canvas></div></div>
+  </div>
+  <div class="cfull">
+    <div class="ctitle">// AVERAGE SCORE BY TOPIC</div>
+    <div class="cwrap" style="height:165px;"><canvas id="scoreChart"></canvas></div>
+  </div>
+  <div class="card">
+    <div class="clbl">// ERROR & CONFUSION BREAKDOWN</div>
+    <div id="errorTable"><div class="empty"><div class="empty-ico">📊</div><p>Click Refresh Dashboard below to load live data from your backend</p></div></div>
+  </div>
+  <div style="margin-top:16px; text-align:right;">
+    <button class="btn btn-p" onclick="loadDashboard()">↻ Refresh Dashboard</button>
+  </div>
+</div>
+
+<!-- ════ ANALYTICS ════ -->
+<div id="analytics" class="page">
+  <div class="ph">
+    <div class="ph-eye">// MODULE_03</div>
+    <div class="ph-title">Cognitive <em>Analytics</em></div>
+    <div class="ph-sub">Metrics from your most recent diagnosis — updates automatically after each analysis</div>
+    <div class="ph-line"></div>
+  </div>
+
+  <div class="s3">
+    <div class="scard s1">
+      <div class="slbl">Clarity Score</div>
+      <div class="sval s1" id="aClarity">—</div>
+      <div class="bar"><div class="bfill" id="aClarityB" style="background:var(--c1)"></div></div>
+    </div>
+    <div class="scard s2">
+      <div class="slbl">Confidence Level</div>
+      <div class="sval s2" id="aConf">—</div>
+      <div class="bar"><div class="bfill" id="aConfB" style="background:var(--c2)"></div></div>
+    </div>
+    <div class="scard s3">
+      <div class="slbl">Sessions This Run</div>
+      <div class="sval s3" id="aSess">—</div>
+      <div class="bar"><div class="bfill" id="aSessB" style="background:var(--c3)"></div></div>
+    </div>
+  </div>
+
+  <div class="c2col" style="margin-bottom:14px;">
+    <div class="ccrd"><div class="ctitle">// SCORE BREAKDOWN</div><div class="cwrap"><canvas id="aBarChart"></canvas></div></div>
+    <div class="ccrd"><div class="ctitle">// COGNITIVE RADAR</div><div class="cwrap"><canvas id="aRadarChart"></canvas></div></div>
+  </div>
+
+  <div class="card">
+    <div class="clbl">// SESSION HISTORY (THIS RUN)</div>
+    <div id="sessTable"><div class="empty"><div class="empty-ico">📋</div><p>No sessions yet — run a Diagnosis first</p></div></div>
+  </div>
+</div>
+
+<!-- ════ PROFILES ════ -->
+<div id="profiles" class="page">
+  <div class="ph">
+    <div class="ph-eye">// MODULE_04</div>
+    <div class="ph-title">Cognitive <em>Profiles</em></div>
+    <div class="ph-sub">Per-user cognitive profiles built from all historical sessions in your backend</div>
+    <div class="ph-line"></div>
+  </div>
+  <div class="card" style="margin-bottom:16px;">
+    <div class="clbl">// LEARNING TRENDS — ALL USERS</div>
+    <div id="trendsTable"><div class="empty"><div class="empty-ico">📈</div><p>Click Load Profiles to fetch data from backend</p></div></div>
+  </div>
+  <div id="profilesGrid" class="pgrid">
+    <div class="empty" style="grid-column:1/-1"><div class="empty-ico">👤</div><p>Load profiles to see cognitive data</p></div>
+  </div>
+  <div style="margin-top:16px; text-align:right;">
+    <button class="btn btn-p" onclick="loadDashboard()">↻ Load Profiles</button>
+  </div>
+</div>
+
+<!-- ════ ABOUT ════ -->
+<div id="about" class="page">
+  <div class="ph">
+    <div class="ph-eye">// MODULE_05</div>
+    <div class="ph-title">About <em>&</em> API</div>
+    <div class="ph-sub">Platform documentation, architecture overview, and API reference</div>
+    <div class="ph-line"></div>
+  </div>
+
+  <div class="a2">
+    <div class="acard">
+      <h3>What is Cognivise?</h3>
+      <p>An AI-driven cognitive assessment platform powered by <em>Google Gemini</em> that analyses <em>how</em> students think — not just whether answers are correct. It builds a profile across reasoning patterns, concept gaps, and confidence.</p>
+      <ul class="alist">
+        <li>Open-ended question generation per topic</li>
+        <li>Per-answer response capture (no MCQs)</li>
+        <li>Reasoning pattern detection</li>
+        <li>Concept gap & confusion analysis</li>
+        <li>Clarity + confidence scoring</li>
+        <li>Learning trend tracking over time</li>
+        <li>Per-user cognitive profile engine</li>
+      </ul>
+    </div>
+    <div class="acard">
+      <h3>Analytics Engine (6 Modules)</h3>
+      <p>All session data is stored in <em>data/sessions.json</em> and processed by:</p>
+      <ul class="alist">
+        <li><strong>scoring_engine</strong> — calculate_score(first, final, correct)</li>
+        <li><strong>topic_analysis</strong> — topic_statistics() + average_scores()</li>
+        <li><strong>thinking_patterns</strong> — thinking_distribution()</li>
+        <li><strong>error_analysis</strong> — error_percentage() per confusion type</li>
+        <li><strong>trend_analysis</strong> — learning_trend() per user</li>
+        <li><strong>cognitive_profile</strong> — dominant pattern + common confusion</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="acard" style="margin-bottom:13px;">
+    <h3>Live API Routes</h3>
+    <div style="margin-top:13px;">
+      <div class="aroute"><span class="mth get">GET</span><span class="rpath">/api/questions</span><span class="rdesc">?topic= &difficulty= &qtype=open</span></div>
+      <div class="aroute"><span class="mth post">POST</span><span class="rpath">/api/analyze</span><span class="rdesc">{ topic, first_attempt, final_answer, user_id }</span></div>
+      <div class="aroute"><span class="mth get">GET</span><span class="rpath">/api/analytics/dashboard</span><span class="rdesc">Full analytics summary</span></div>
+      <div class="aroute"><span class="mth get">GET</span><span class="rpath">/app</span><span class="rdesc">Serves this frontend (FastAPI FileResponse)</span></div>
+    </div>
+  </div>
+
+  <div class="acard">
+    <h3>Score Formula</h3>
+    <p style="font-family:'JetBrains Mono',monospace; font-size:.8rem; color:var(--c1); margin-top:9px; line-height:2.2;">
+      score = (final_attempt / correct_answer) × 70<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;+ max(improvement, 0) × 3<br>
+      <span style="color:var(--text2); font-size:.68rem;">where improvement = final_attempt − first_attempt</span>
+    </p>
+    <p style="margin-top:9px; font-size:.82rem;">Rewards both accuracy and measurable growth between first and final attempt.</p>
+  </div>
+</div>
+
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════
+//  STATE
+// ═══════════════════════════════════
+const sessionLog = [];
+const charts = {};
+let currentQuestions = [];
+let dashData = null;
+
+// ═══════════════════════════════════
+//  CANVAS
+// ═══════════════════════════════════
+(function(){
+  const c=document.getElementById('bgCanvas'), ctx=c.getContext('2d');
+  let W,H,pts=[];
+  function resize(){W=c.width=innerWidth; H=c.height=innerHeight;}
+  resize(); window.addEventListener('resize',resize);
+  for(let i=0;i<52;i++) pts.push({x:Math.random()*1920,y:Math.random()*1080,r:Math.random()*.9+.25,vx:(Math.random()-.5)*.2,vy:(Math.random()-.5)*.2,o:Math.random()*.3+.07});
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const light=document.documentElement.dataset.theme==='light';
+    const clr=light?'14,100,180':'82,200,255', op=light?.35:1;
+    pts.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${clr},${p.o*op})`; ctx.fill();
+    });
+    for(let i=0;i<pts.length;i++) for(let j=i+1;j<pts.length;j++){
+      const dx=pts[i].x-pts[j].x,dy=pts[i].y-pts[j].y,d=Math.sqrt(dx*dx+dy*dy);
+      if(d<110){ctx.beginPath();ctx.moveTo(pts[i].x,pts[i].y);ctx.lineTo(pts[j].x,pts[j].y);ctx.strokeStyle=`rgba(${clr},${.025*(1-d/110)*op})`;ctx.lineWidth=.5;ctx.stroke();}
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ═══════════════════════════════════
+//  THEME
+// ═══════════════════════════════════
+function toggleTheme(){
+  const h=document.documentElement, isL=h.dataset.theme==='light';
+  h.dataset.theme=isL?'dark':'light';
+  document.getElementById('thLbl').textContent=isL?'LIGHT MODE':'DARK MODE';
+  document.getElementById('thIco').textContent=isL?'☀️':'🌙';
+  localStorage.setItem('cv_theme',h.dataset.theme);
+}
+(function(){
+  const s=localStorage.getItem('cv_theme')||'dark';
+  document.documentElement.dataset.theme=s;
+  document.getElementById('thLbl').textContent=s==='light'?'DARK MODE':'LIGHT MODE';
+  document.getElementById('thIco').textContent=s==='light'?'🌙':'☀️';
+})();
+
+// ═══════════════════════════════════
+//  NAV
+// ═══════════════════════════════════
+function goPage(id,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ═══════════════════════════════════
+//  LOADING + TOAST
+// ═══════════════════════════════════
+function loading(on,txt='PROCESSING'){
+  document.getElementById('otxt').textContent=txt;
+  document.getElementById('overlay').classList.toggle('on',on);
+}
+function toast(msg,err=false){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.className='toast on'+(err?' err':'');
+  setTimeout(()=>el.classList.remove('on'),3500);
+}
+
+// ═══════════════════════════════════
+//  GENERATE QUESTIONS
+//  → GET /api/questions?topic=&difficulty=&qtype=open
+// ═══════════════════════════════════
+async function generateQuestions(btn){
+  const topic=document.getElementById('topicInput').value.trim();
+  const diff=document.getElementById('diffInput').value;
+  if(!topic){toast('Enter a topic first',true);return;}
+  loading(true,'GENERATING QUESTIONS');
+  btn.disabled=true;
+  try{
+    const res=await fetch(`/api/questions?topic=${encodeURIComponent(topic)}&difficulty=${encodeURIComponent(diff)}&qtype=open`);
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+    let qs;
+    try{
+      let raw=data.questions;
+      if(typeof raw==='string'){raw=raw.replace(/```json|```/g,'').trim(); qs=JSON.parse(raw);}
+      else qs=raw;
+      if(!Array.isArray(qs)) throw new Error('not array');
+    }catch{
+      // If backend returns a single string question, wrap it
+      qs=[{question: typeof data.questions==='string'?data.questions:'Could not parse questions from AI response.'}];
+    }
+    currentQuestions=qs;
+    renderQuestions(qs);
+    document.getElementById('thinkingPanel').style.display='block';
+    document.getElementById('reportBox').innerHTML='';
+    toast('✓ Questions generated');
+  }catch(e){
+    toast('Error: '+e.message,true);
+    // Helpful fallback so UI still works
+    currentQuestions=[{question:`Explain how ${topic} works in detail. What are the key concepts and common mistakes?`}];
+    renderQuestions(currentQuestions);
+    document.getElementById('thinkingPanel').style.display='block';
+  }finally{loading(false);btn.disabled=false;}
+}
+
+function renderQuestions(qs){
+  const box=document.getElementById('questionBox');
+  box.innerHTML='';
+  qs.forEach((q,i)=>{
+    const card=document.createElement('div');
+    card.className='q-card'; card.style.animationDelay=`${i*.09}s`;
+    card.innerHTML=`
+      <div class="q-num">QUESTION ${String(i+1).padStart(2,'0')}</div>
+      <div class="q-text">${q.question}</div>
+      <div class="ans-lbl">// YOUR ANSWER</div>
+      <textarea class="ans-box" id="ans_${i}" placeholder="Write your answer here..."></textarea>
+    `;
+    box.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════
+//  ANALYZE THINKING
+//  → POST /api/analyze
+// ═══════════════════════════════════
+async function analyzeThinking(btn){
+  const topic=document.getElementById('topicInput').value.trim();
+  const thinking=document.getElementById('thinkingInput').value.trim();
+  const userId=document.getElementById('userId').value.trim()||'user_001';
+  if(!thinking){toast('Describe your thinking process first',true);return;}
+
+  // Collect all per-question answers into one final_answer string
+  const answers=currentQuestions.map((q,i)=>{
+    const ans=document.getElementById(`ans_${i}`)?.value.trim()||'(no answer provided)';
+    return `Q${i+1}: ${q.question}\nAnswer: ${ans}`;
+  }).join('\n\n');
+
+  loading(true,'ANALYZING COGNITIVE PATTERN');
+  btn.disabled=true;
+  try{
+    const res=await fetch('/api/analyze',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({topic, first_attempt:thinking, final_answer:answers, user_id:userId})
+    });
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data=await res.json();
+
+    let result;
+    try{
+      let raw=data.analysis;
+      if(typeof raw==='string'){raw=raw.replace(/```json|```/g,'').trim(); result=JSON.parse(raw);}
+      else result=raw;
+    }catch{
+      result={thinking_pattern:'Unknown',concept_gap:'Could not parse AI response',confidence_level:'50',clarity_score:'50',feedback:data.analysis||'Analysis complete.'};
+    }
+    renderReport(result,topic);
+    toast('✓ Cognitive analysis complete');
+  }catch(e){
+    toast('Error: '+e.message,true);
+  }finally{loading(false);btn.disabled=false;}
+}
+
+function renderReport(r,topic){
+  const clarity=parseNum(r.clarity_score);
+  const confidence=parseNum(r.confidence_level);
+  document.getElementById('reportBox').innerHTML=`
+    <div class="report">
+      <div class="rhead">// AI COGNITIVE REPORT — ${(topic||'UNKNOWN').toUpperCase()}</div>
+      <div class="rgrid">
+        <div class="ri">
+          <div class="ri-lbl">Thinking Pattern</div>
+          <div class="ri-val">${r.thinking_pattern||'—'}</div>
+        </div>
+        <div class="ri">
+          <div class="ri-lbl">Concept Gap Identified</div>
+          <div class="ri-val">${r.concept_gap||'—'}</div>
+        </div>
+        <div class="ri">
+          <div class="ri-lbl">Clarity Score</div>
+          <div class="ri-score" style="color:var(--c1)">${clarity}<span style="font-size:.95rem;opacity:.5">%</span></div>
+          <div class="bar"><div class="bfill" data-w="${clarity}" style="background:var(--c1)"></div></div>
+        </div>
+        <div class="ri">
+          <div class="ri-lbl">Confidence Level</div>
+          <div class="ri-score" style="color:var(--c2)">${confidence}<span style="font-size:.95rem;opacity:.5">%</span></div>
+          <div class="bar"><div class="bfill" data-w="${confidence}" style="background:var(--c2)"></div></div>
+        </div>
+      </div>
+      ${r.feedback?`<div class="feedback"><strong>// AI FEEDBACK</strong>${r.feedback}</div>`:''}
+    </div>`;
+  setTimeout(()=>{document.querySelectorAll('.bfill[data-w]').forEach(el=>{el.style.width=el.dataset.w+'%';});},80);
+  updateAnalytics(clarity,confidence);
+  logSession(topic,clarity,confidence,r.thinking_pattern);
+}
+
+// ═══════════════════════════════════
+//  ANALYTICS
+// ═══════════════════════════════════
+function updateAnalytics(clarity,confidence){
+  const sess=sessionLog.length;
+  document.getElementById('aClarity').textContent=clarity+'%';
+  document.getElementById('aConf').textContent=confidence+'%';
+  document.getElementById('aSess').textContent=sess;
+  setTimeout(()=>{
+    document.getElementById('aClarityB').style.width=clarity+'%';
+    document.getElementById('aConfB').style.width=confidence+'%';
+    document.getElementById('aSessB').style.width=Math.min(100,sess*12)+'%';
+  },200);
+  buildBarChart(clarity,confidence);
+  buildRadarChart(clarity,confidence);
+}
+function buildBarChart(a,b){
+  const ctx=document.getElementById('aBarChart').getContext('2d');
+  if(charts.bar)charts.bar.destroy();
+  charts.bar=new Chart(ctx,{type:'bar',
+    data:{labels:['Clarity','Confidence'],datasets:[{data:[a,b],backgroundColor:['rgba(82,200,255,.18)','rgba(255,77,114,.18)'],borderColor:['#52c8ff','#ff4d72'],borderWidth:1.5,borderRadius:5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a789a',font:{family:'JetBrains Mono',size:10}}},x:{grid:{display:false},ticks:{color:'#5a789a',font:{family:'JetBrains Mono',size:11}}}}}
+  });
+}
+function buildRadarChart(a,b){
+  const ctx=document.getElementById('aRadarChart').getContext('2d');
+  if(charts.radar)charts.radar.destroy();
+  charts.radar=new Chart(ctx,{type:'radar',
+    data:{labels:['Clarity','Confidence','Depth','Accuracy','Pattern'],datasets:[{data:[a,b,Math.round((a+b)/2),Math.round(b*.9),Math.round(a*.85)],backgroundColor:'rgba(82,200,255,.07)',borderColor:'#52c8ff',borderWidth:1.5,pointBackgroundColor:'#52c8ff',pointRadius:3}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{r:{min:0,max:100,grid:{color:'rgba(255,255,255,.05)'},angleLines:{color:'rgba(255,255,255,.05)'},ticks:{display:false},pointLabels:{color:'#5a789a',font:{family:'JetBrains Mono',size:10}}}}}
+  });
+}
+
+// ═══════════════════════════════════
+//  SESSION LOG
+// ═══════════════════════════════════
+function logSession(topic,clarity,confidence,pattern){
+  sessionLog.push({topic,clarity,confidence,pattern,time:new Date().toLocaleTimeString()});
+  const el=document.getElementById('sessTable');
+  el.innerHTML=`<table class="tbl"><thead><tr><th>TIME</th><th>TOPIC</th><th>CLARITY</th><th>CONFIDENCE</th><th>PATTERN</th></tr></thead><tbody>
+    ${sessionLog.slice().reverse().map(s=>`<tr>
+      <td>${s.time}</td><td>${s.topic}</td>
+      <td><span class="pill ${s.clarity>=70?'hi':s.clarity>=40?'md':'lo'}">${s.clarity}%</span></td>
+      <td><span class="pill ${s.confidence>=70?'hi':s.confidence>=40?'md':'lo'}">${s.confidence}%</span></td>
+      <td>${s.pattern||'—'}</td>
+    </tr>`).join('')}
+  </tbody></table>`;
+}
+function saveSession(){toast('✓ Session saved for '+(document.getElementById('userId').value||'user_001'));}
+
+// ═══════════════════════════════════
+//  DASHBOARD → GET /api/analytics/dashboard
+// ═══════════════════════════════════
+async function loadDashboard(){
+  loading(true,'LOADING DASHBOARD');
+  try{
+    const res=await fetch('/api/analytics/dashboard');
+    if(!res.ok) throw new Error(`HTTP ${res.status}`);
+    dashData=await res.json();
+    toast('✓ Dashboard loaded from backend');
+  }catch(e){
+    toast('Backend error: '+e.message+' — showing demo data',true);
+    dashData=demoDash();
+  }finally{
+    renderDash(dashData);
+    renderProfiles(dashData);
+    loading(false);
+  }
+}
+function renderDash(d){
+  const total=Object.values(d.topic_statistics||{}).reduce((a,b)=>a+b,0);
+  const avgs=Object.values(d.average_scores||{});
+  const avg=avgs.length?(avgs.reduce((a,b)=>a+b,0)/avgs.length).toFixed(1):'—';
+  const topT=Object.entries(d.topic_statistics||{}).sort((a,b)=>b[1]-a[1])[0]?.[0]||'—';
+  const imprv=Object.values(d.learning_trends||{}).filter(t=>t==='improving').length;
+  document.getElementById('dTotal').textContent=total||'—';
+  document.getElementById('dAvg').textContent=avg;
+  document.getElementById('dTop').textContent=topT;
+  document.getElementById('dImprv').textContent=imprv;
+
+  buildDonut('topicChart',Object.keys(d.topic_statistics||{}),Object.values(d.topic_statistics||{}));
+  buildDonut('patternChart',Object.keys(d.thinking_patterns||{}),Object.values(d.thinking_patterns||{}),['#6dff72','#52c8ff','#ff4d72','#ffbd4d','#c084fc']);
+  buildBarD('scoreChart',Object.keys(d.average_scores||{}),Object.values(d.average_scores||{}));
+
+  const errs=d.error_percentages||{};
+  const eel=document.getElementById('errorTable');
+  if(!Object.keys(errs).length){eel.innerHTML='<div class="empty"><div class="empty-ico">✓</div><p>No errors recorded yet</p></div>';return;}
+  eel.innerHTML=`<table class="tbl"><thead><tr><th>CONFUSION TYPE</th><th>%</th><th>SEVERITY</th></tr></thead><tbody>
+    ${Object.entries(errs).sort((a,b)=>b[1]-a[1]).map(([t,p])=>`<tr><td>${t}</td><td>${p}%</td><td><span class="pill ${p>40?'lo':p>20?'md':'hi'}">${p>40?'HIGH':p>20?'MED':'LOW'}</span></td></tr>`).join('')}
+  </tbody></table>`;
+}
+function buildDonut(id,labels,data,colors=['#52c8ff','#ff4d72','#6dff72','#ffbd4d','#c084fc','#f97316']){
+  const ctx=document.getElementById(id).getContext('2d');
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(ctx,{type:'doughnut',
+    data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'28'),borderColor:colors,borderWidth:1.5}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#5a789a',font:{family:'JetBrains Mono',size:9},padding:12,boxWidth:10}}}}
+  });
+}
+function buildBarD(id,labels,data){
+  const ctx=document.getElementById(id).getContext('2d');
+  if(charts[id])charts[id].destroy();
+  charts[id]=new Chart(ctx,{type:'bar',
+    data:{labels,datasets:[{label:'Avg Score',data,backgroundColor:'rgba(82,200,255,.15)',borderColor:'#52c8ff',borderWidth:1.5,borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#5a789a',font:{family:'JetBrains Mono',size:10}}},x:{grid:{display:false},ticks:{color:'#5a789a',font:{family:'JetBrains Mono',size:10}}}}}
+  });
+}
+
+// ═══════════════════════════════════
+//  PROFILES
+// ═══════════════════════════════════
+function renderProfiles(d){
+  const trends=d.learning_trends||{};
+  const tel=document.getElementById('trendsTable');
+  tel.innerHTML=!Object.keys(trends).length
+    ?'<div class="empty"><div class="empty-ico">📈</div><p>No trend data yet</p></div>'
+    :`<table class="tbl"><thead><tr><th>USER ID</th><th>TREND</th></tr></thead><tbody>
+      ${Object.entries(trends).map(([u,t])=>`<tr><td>${u}</td><td><span class="pill ${t==='improving'?'up':t==='declining'?'dn':'st'}">${t}</span></td></tr>`).join('')}
+    </tbody></table>`;
+
+  const profiles=d.cognitive_profiles||{};
+  const gel=document.getElementById('profilesGrid');
+  if(!Object.keys(profiles).length){gel.innerHTML='<div class="empty" style="grid-column:1/-1"><div class="empty-ico">👤</div><p>No profiles yet</p></div>';return;}
+  gel.innerHTML=Object.entries(profiles).map(([uid,p])=>{
+    const trend=trends[uid]||'stable';
+    const init=uid.replace(/[^a-zA-Z]/g,'').slice(0,2).toUpperCase()||'U?';
+    return `<div class="pcard">
+      <div class="pheader">
+        <div class="ava">${init}</div>
+        <div><div class="pid">${uid}</div><div class="psub">COGNITIVE PROFILE</div></div>
+        <span class="pill ${trend==='improving'?'up':trend==='declining'?'dn':'st'}" style="margin-left:auto">${trend}</span>
+      </div>
+      <div class="pstats">
+        <div class="ps"><span class="psl">Avg Score</span><span class="psv" style="color:var(--c1)">${p.average_score??'—'}</span></div>
+        <div class="ps"><span class="psl">Dominant Thinking</span><span class="psv">${p.dominant_thinking??'—'}</span></div>
+        <div class="ps"><span class="psl">Common Confusion</span><span class="psv" style="color:var(--c2)">${p.common_confusion??'—'}</span></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════
+//  DEMO DATA (only when backend down)
+// ═══════════════════════════════════
+function demoDash(){return{topic_statistics:{RECURSION:12,SORTING:8,GRAPHS:5,TREES:9},average_scores:{RECURSION:74.2,SORTING:68.5,GRAPHS:61,TREES:79.3},thinking_patterns:{Analytical:14,Sequential:10,Intuitive:7,Systematic:3},error_percentages:{'Base Case Error':42.3,'Off-by-one':28.1,'Recursion Depth':18.5,Other:11.1},learning_trends:{user_001:'improving',user_002:'stable',user_003:'declining',user_004:'improving'},cognitive_profiles:{user_001:{average_score:74.5,dominant_thinking:'Analytical',common_confusion:'Base Case'},user_002:{average_score:61.2,dominant_thinking:'Sequential',common_confusion:'Recursion Depth'},user_003:{average_score:55.8,dominant_thinking:'Intuitive',common_confusion:'Off-by-one'},user_004:{average_score:82.1,dominant_thinking:'Systematic',common_confusion:'Edge Cases'}}};}
+
+// ═══════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════
+function parseNum(val){
+  if(typeof val==='number') return Math.min(100,Math.max(0,Math.round(val)));
+  const m=String(val).match(/\d+/);
+  return m?Math.min(100,parseInt(m[0])):50;
+}
+</script>
+</body>
+</html>
